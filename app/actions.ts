@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { signIn, signOut } from "@/auth";
 import { createUser, getUserByEmail } from "@/lib/db";
+import { sendWelcomeEmail } from "@/lib/cio-transactional";
 
 export type FormState = { error?: string } | undefined;
 
@@ -56,6 +57,14 @@ export async function register(
     await createUser(name, email, hash);
   } catch {
     return { error: "Could not create your account. Is the database configured?" };
+  }
+
+  // Send the welcome email via Customer.io. Best-effort: a messaging failure
+  // must not block a successfully created account.
+  try {
+    await sendWelcomeEmail({ email, name });
+  } catch (error) {
+    console.error("welcome-email-error", error);
   }
 
   // Sign the new user straight in (redirects to /dashboard on success).
