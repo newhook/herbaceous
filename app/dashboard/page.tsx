@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { logout } from "@/app/actions";
+import { CioIdentify } from "@/app/cio-identify";
 import { Recommender } from "./recommender";
 
 export default async function DashboardPage() {
@@ -11,6 +12,9 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+      {session.user.email ? (
+        <CioIdentify email={session.user.email} name={session.user.name} />
+      ) : null}
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm text-black/60 dark:text-white/60">Welcome back,</p>

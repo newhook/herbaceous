@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FOOD_OPTIONS, recommendHerbs } from "@/lib/herbs";
+import { cioAnalytics } from "@/lib/cio-analytics";
 
 export function Recommender() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -21,6 +22,20 @@ export function Recommender() {
   };
 
   const hasInput = selected.size > 0 || notes.trim().length > 0;
+
+  // Track the meaningful outcome — herbs recommended for the user's tastes.
+  // Debounced so rapid food toggles / typing produce a single settled event.
+  useEffect(() => {
+    if (!hasInput || recommendations.length === 0) return;
+    const timer = setTimeout(() => {
+      cioAnalytics?.track("Herbs Recommended", {
+        foods: [...selected],
+        herbs: recommendations.map((herb) => herb.name),
+        hasNotes: notes.trim().length > 0,
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [selected, notes, recommendations, hasInput]);
 
   return (
     <div className="space-y-8">
